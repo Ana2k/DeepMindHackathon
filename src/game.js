@@ -15,10 +15,17 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Load P1 (Girl) assets from absolute paths
-    this.load.svg('p1_stand', '/Girl/player1_stand.svg');
-    this.load.svg('p1_walk', '/Girl/player1_walk.svg');
-    this.load.svg('p1_jump', '/Girl/player1_jump.svg');
-    this.load.svg('p1_punch', '/Girl/player1_punch.svg');
+    if (window.gameSettings && window.gameSettings.p1Sprites) {
+      this.load.svg('p1_stand', window.gameSettings.p1Sprites['sprite_idle']);
+      this.load.svg('p1_walk', window.gameSettings.p1Sprites['sprite_walk_right']);
+      this.load.svg('p1_jump', window.gameSettings.p1Sprites['sprite_jump']);
+      this.load.svg('p1_punch', window.gameSettings.p1Sprites['sprite_punch']);
+    } else {
+      this.load.svg('p1_stand', '/Girl/player1_stand.svg');
+      this.load.svg('p1_walk', '/Girl/player1_walk.svg');
+      this.load.svg('p1_jump', '/Girl/player1_jump.svg');
+      this.load.svg('p1_punch', '/Girl/player1_punch.svg');
+    }
 
     // Load P2 (Finnish) assets from absolute paths
     this.load.svg('p2_stand', '/Finnish/Stand.svg');

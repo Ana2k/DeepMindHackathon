@@ -16,6 +16,9 @@
           <label>Left: <input type="text" id="p1-left" value="A" maxlength="10"></label>
           <label>Right: <input type="text" id="p1-right" value="D" maxlength="10"></label>
           <label>Attack: <input type="text" id="p1-attack" value="F" maxlength="10"></label>
+          <hr style="opacity: 0.2; margin: 10px 0;">
+          <label>Custom Sprite (Optional): <input type="file" id="p1-sprite-upload" accept="image/png, image/jpeg, image/webp" style="margin-top: 5px;"></label>
+          <small style="color: #aaa; display: block; margin-top: 5px;">Powered by Gemini (3-Pro & Flash)</small>
         </div>
         <div class="menu-section">
           <h2>Player 2 Controls</h2>
@@ -33,7 +36,7 @@
         <small style="color: #aaa; display: block; margin-top: 5px;">Powered by Gemini API (Imagen)</small>
       </div>
       <button id="start-btn">Generate & Start Game</button>
-      <div id="loading" style="display: none;">Generating background... Please wait...</div>
+      <div id="loading" style="display: none; white-space: pre-wrap;">Initializing...</div>
     </div>
 
     <div id="game-container" style="display: none;">

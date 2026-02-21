@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GameScene } from './game.js';
 import { GoogleGenAI } from '@google/genai';
+import { generateSprites } from './SpritePipeline.js';
 
 document.getElementById('start-btn').addEventListener('click', async () => {
   const p1Controls = {
@@ -19,16 +20,32 @@ document.getElementById('start-btn').addEventListener('click', async () => {
 
   const bgPrompt = document.getElementById('bg-prompt').value;
   const bgImageFile = document.getElementById('bg-image').files[0];
+  const p1SpriteFile = document.getElementById('p1-sprite-upload').files[0];
 
   // Show loading
   document.getElementById('start-btn').style.display = 'none';
-  document.getElementById('loading').style.display = 'block';
+  const loadingDiv = document.getElementById('loading');
+  loadingDiv.style.display = 'block';
+
+  let p1GeneratedSprites = null;
+  if (p1SpriteFile) {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      p1GeneratedSprites = await generateSprites(p1SpriteFile, apiKey, (statusMsg) => {
+        loadingDiv.innerText = statusMsg;
+      });
+    } catch (e) {
+      console.error("Error generating Player 1 sprites:", e);
+      loadingDiv.innerText = "Error generating sprites. Proceeding without custom sprites...";
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  }
 
   let bgUrl = '/assets/backgrounds/bg.svg'; // fallback
-  
+
   let base64Image = null;
   let imageMimeType = null;
-  
+
   if (bgImageFile) {
     imageMimeType = bgImageFile.type;
     base64Image = await new Promise((resolve, reject) => {
@@ -40,10 +57,11 @@ document.getElementById('start-btn').addEventListener('click', async () => {
   }
 
   if (bgPrompt.trim() || base64Image) {
+    loadingDiv.innerText = "Generating background... Please wait...";
     try {
       const apiKey = process.env.GEMINI_API_KEY;
       const ai = new GoogleGenAI({ apiKey });
-      
+
       const parts = [];
       if (base64Image) {
         parts.push({
@@ -60,14 +78,14 @@ document.getElementById('start-btn').addEventListener('click', async () => {
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: [{
-            role: 'user',
-            parts: parts
+          role: 'user',
+          parts: parts
         }],
         config: {
-            responseModalities: ['IMAGE']
+          responseModalities: ['IMAGE']
         }
       });
-      
+
       const part = response.candidates[0]?.content?.parts[0];
       if (part && part.inlineData) {
         const mimeType = part.inlineData.mimeType || 'image/png';
@@ -89,7 +107,8 @@ document.getElementById('start-btn').addEventListener('click', async () => {
   window.gameSettings = {
     p1Controls,
     p2Controls,
-    bgUrl
+    bgUrl,
+    p1Sprites: p1GeneratedSprites
   };
 
   const config = {
