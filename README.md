@@ -1,6 +1,6 @@
-# 🕹️ G-Bros (Anything Arcade)
+# 🕹️ Anything Arcade Bros 
 
-**G-Bros** is an innovative, AI-powered platform fighter that brings the nostalgic 90s arcade experience into the future. Players can upload any photo or provide a text prompt to generate custom fighters and arenas, creating a truly personalized combat experience.
+**Anything Arcade Bros** is an innovative, AI-powered platform fighter that brings the nostalgic 90s arcade experience into the future. Players can upload any photo or provide a text prompt to generate custom fighters and arenas, creating a truly personalized combat experience.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### 🌍 Impact (25%)
 **What is the project’s long-term potential for success, growth, and impact?**
-- **Hyper-Personalization:** By enabling users to turn personal photos, pets, or even inanimate objects into playable characters, G-Bros eliminates the "static roster" limitation of traditional fighters.
+- **Hyper-Personalization:** By enabling users to turn personal photos, pets, or even inanimate objects into playable characters, Anything Arcade Bros eliminates the "static roster" limitation of traditional fighters.
 - **AI-Driven Creativity:** The project demonstrates a seamless integration of Generative AI (Google Gemini) into the game development workflow, lowering the barrier for creator-generated content.
 - **Problem Statement Fit:** Addresses the intersection of **Generative AI and Real-time Entertainment**, showing how multimodal models can go beyond text output to generate functional, game-ready assets (SVGs, backgrounds).
 - **Target Audience:** Casual gamers, streamers looking for unique interactive content, and collectors of personalized digital assets.
@@ -38,14 +38,14 @@
 
 ### 🎤 Pitch (10%)
 **How effectively does the team present their project?**
-G-Bros is not just a game; it's a **generative engine for nostalgia**. We've combined the latest in multimodal AI with the timeless fun of platform brawlers. Our pitch focuses on the "WOW" factor of seeing yourself transformed into a pixel-art hero in a custom-built cyberpunk Tokyo alleyway.
+Anything Arcade Bros is not just a game; it's a **generative engine for nostalgia**. We've combined the latest in multimodal AI with the timeless fun of platform brawlers. Our pitch focuses on the "WOW" factor of seeing yourself transformed into a pixel-art hero in a custom-built cyberpunk Tokyo alleyway.
 
 ---
 
 ## 🛠️ Technical Deep Dive
 
 ### ✨ The Vibe-Code Stack
-G-Bros was developed through an accelerated "vibe-coding" workflow using:
+Anything Arcade Bros was developed through an accelerated "vibe-coding" workflow using:
 - **Antigravity:** The primary AI agent coordinator for rapid architectural drafting and system integration.
 - **Gemini 3-Flash:** The high-speed backbone for real-time asset generation and logic validation.
 - **Nanobanana:** Orchestration layer used to maintain the "chaos-under-control" development pace.
@@ -74,5 +74,5 @@ G-Bros was developed through an accelerated "vibe-coding" workflow using:
 ## 🚀 Getting Started
 1. Install dependencies: `npm install`
 2. Set up your `.env` with `GEMINI_API_KEY`.
-3. Start the engine: `npm start`
+3. Start the engine: `npm run dev`
 4. **Insert Coin and Fight!**
