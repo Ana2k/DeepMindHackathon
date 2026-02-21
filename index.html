@@ -27,19 +27,26 @@
         <label>Attack: <input type="text" id="p2-attack" value="SHIFT" maxlength="10"></label>
       </div>
     </div>
-    <div class="menu-section character-section">
-      <h2>🎨 Player 1 – Custom Character</h2>
-      <p style="color: #aaa; font-size: 12px; margin: 0 0 10px;">Upload your photo to generate a custom pixel art
-        fighter!</p>
-      <label>Your Photo: <input type="file" id="p1-sprite-image" accept="image/png, image/jpeg, image/webp"
-          style="margin-top: 5px;"></label>
-      <div id="p1-sprite-preview-container" style="display: none; margin-top: 10px; text-align: center;">
-        <img id="p1-sprite-preview"
-          style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 2px solid #ff6b6b;" />
-        <small style="color: #aaa; display: block; margin-top: 4px;">Your custom character</small>
+    <div class="characters-wrapper">
+      <div class="menu-section character-section">
+        <h2>🎨 Player 1 – Custom</h2>
+        <label>Photo: <input type="file" id="p1-sprite-image" accept="image/png, image/jpeg, image/webp"
+            style="margin-top: 5px;"></label>
+        <div id="p1-sprite-preview-container" class="preview-container">
+          <img id="p1-sprite-preview" class="preview-img" />
+        </div>
       </div>
-      <small id="p1-server-status" style="color: #666; display: block; margin-top: 8px;">Checking sprite
-        server...</small>
+      <div class="menu-section character-section">
+        <h2>🎨 Player 2 – Custom</h2>
+        <label>Photo: <input type="file" id="p2-sprite-image" accept="image/png, image/jpeg, image/webp"
+            style="margin-top: 5px;"></label>
+        <div id="p2-sprite-preview-container" class="preview-container">
+          <img id="p2-sprite-preview" class="preview-img" />
+        </div>
+      </div>
+    </div>
+    <div style="text-align: center; width: 100%; margin-bottom: 10px;">
+      <small id="sprite-server-status" style="color: #666;">Checking sprite server...</small>
     </div>
     <div class="menu-section arena-section">
       <h2>Arena Settings</h2>

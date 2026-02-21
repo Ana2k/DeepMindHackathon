@@ -30,11 +30,19 @@ export class GameScene extends Phaser.Scene {
       this.load.svg('p1_punch', '/Girl/player1_punch.svg');
     }
 
-    // Load P2 (Finnish) assets from absolute paths
-    this.load.svg('p2_stand', '/Finnish/Stand.svg');
-    this.load.svg('p2_walk', '/Finnish/Walk.svg');
-    this.load.svg('p2_jump', '/Finnish/Jump.svg');
-    this.load.svg('p2_punch', '/Finnish/Punch.svg');
+    // Load P2 assets — custom sprites or default Finnish SVGs
+    const p2s = window.gameSettings && window.gameSettings.p2Sprites;
+    if (p2s && p2s.idle) {
+      this.load.svg('p2_stand', p2s.idle);
+      this.load.svg('p2_walk', p2s.walk || p2s.idle);
+      this.load.svg('p2_jump', p2s.jump || p2s.idle);
+      this.load.svg('p2_punch', p2s.punch || p2s.idle);
+    } else {
+      this.load.svg('p2_stand', '/Finnish/Stand.svg');
+      this.load.svg('p2_walk', '/Finnish/Walk.svg');
+      this.load.svg('p2_jump', '/Finnish/Jump.svg');
+      this.load.svg('p2_punch', '/Finnish/Punch.svg');
+    }
 
     this.load.svg('platform_base', '/assets/models/platform.svg');
   }

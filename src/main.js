@@ -17,15 +17,29 @@ document.getElementById('p1-sprite-image').addEventListener('change', (e) => {
   }
 });
 
+// — Preview uploaded P2 image —
+document.getElementById('p2-sprite-image').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  const previewContainer = document.getElementById('p2-sprite-preview-container');
+  const previewImg = document.getElementById('p2-sprite-preview');
+  if (file) {
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewContainer.style.display = 'block';
+  } else {
+    previewContainer.style.display = 'none';
+  }
+});
+
 // — Check sprite server health on load —
 (async () => {
-  const statusEl = document.getElementById('p1-server-status');
+  const statusEl = document.getElementById('sprite-server-status');
   const isUp = await checkSpriteServer();
   if (isUp) {
     statusEl.textContent = '✅ Sprite server connected';
     statusEl.style.color = '#4caf50';
   } else {
-    statusEl.textContent = '⚠️ Sprite server not running (run: python sprite_server.py)';
+    statusEl.textContent = '⚠️ Sprite server not running (npm run sprite-server)';
     statusEl.style.color = '#ff9800';
   }
 })();
@@ -49,6 +63,7 @@ document.getElementById('start-btn').addEventListener('click', async () => {
   const bgPrompt = document.getElementById('bg-prompt').value;
   const bgImageFile = document.getElementById('bg-image').files[0];
   const p1SpriteFile = document.getElementById('p1-sprite-image').files[0];
+  const p2SpriteFile = document.getElementById('p2-sprite-image').files[0];
 
   // Show loading
   document.getElementById('start-btn').style.display = 'none';
@@ -56,28 +71,43 @@ document.getElementById('start-btn').addEventListener('click', async () => {
   const loadingText = document.getElementById('loading-text');
 
   // ——————————————————————————————
-  // 1. Generate Player 1 Custom Sprites (if photo uploaded)
+  // 1. Generate Player 1 Custom Sprites
   // ——————————————————————————————
   let p1Sprites = null;
-
   if (p1SpriteFile) {
     try {
-      loadingText.textContent = 'Starting sprite generation...';
+      loadingText.textContent = 'Generating P1 sprites...';
       p1Sprites = await generateSprites(p1SpriteFile, (msg) => {
-        loadingText.textContent = msg;
+        loadingText.textContent = `P1: ${msg}`;
       });
-      console.log('✅ Custom P1 sprites generated:', p1Sprites);
+      console.log('✅ Custom P1 sprites generated');
     } catch (err) {
-      console.error('❌ Sprite generation failed, using defaults:', err);
-      loadingText.textContent = 'Sprite generation failed, using defaults...';
-      p1Sprites = null;
-      // Brief pause so user can see the message
-      await new Promise(r => setTimeout(r, 1500));
+      console.error('❌ P1 sprite generation failed:', err);
+      loadingText.textContent = 'P1 generation failed, using defaults...';
+      await new Promise(r => setTimeout(r, 1000));
     }
   }
 
   // ——————————————————————————————
-  // 2. Generate Background
+  // 2. Generate Player 2 Custom Sprites
+  // ——————————————————————————————
+  let p2Sprites = null;
+  if (p2SpriteFile) {
+    try {
+      loadingText.textContent = 'Generating P2 sprites...';
+      p2Sprites = await generateSprites(p2SpriteFile, (msg) => {
+        loadingText.textContent = `P2: ${msg}`;
+      });
+      console.log('✅ Custom P2 sprites generated');
+    } catch (err) {
+      console.error('❌ P2 sprite generation failed:', err);
+      loadingText.textContent = 'P2 generation failed, using defaults...';
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+
+  // ——————————————————————————————
+  // 3. Generate Background
   // ——————————————————————————————
   loadingText.textContent = 'Generating background...';
 
@@ -138,17 +168,17 @@ document.getElementById('start-btn').addEventListener('click', async () => {
   }
 
   // ——————————————————————————————
-  // 3. Launch Game
+  // 4. Launch Game
   // ——————————————————————————————
   document.getElementById('menu-container').style.display = 'none';
   document.getElementById('game-container').style.display = 'block';
 
-  // Make settings globally available to the scene
   window.gameSettings = {
     p1Controls,
     p2Controls,
     bgUrl,
-    p1Sprites  // { idle, walk, punch, jump } blob URLs, or null
+    p1Sprites,
+    p2Sprites
   };
 
   const config = {
