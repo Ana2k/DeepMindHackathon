@@ -18,7 +18,7 @@ export async function generateSprites(imageFile, onProgress = () => { }) {
     const formData = new FormData();
     formData.append('image', imageFile);
 
-    onProgress('Generating sprites with AI (this takes ~60s)...');
+    onProgress('Generating sprites with AI (this takes a while, go touch grass until then..)');
 
     const response = await fetch(`${SPRITE_SERVER_URL}/generate-sprites`, {
         method: 'POST',

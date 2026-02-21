@@ -4,78 +4,143 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Supercell Bros</title>
+  <title>Anything Arcade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/style.css">
 </head>
 
 <body>
+  <!-- ═══════════════════════════════════════ -->
+  <!-- TITLE / MENU SCREEN                    -->
+  <!-- ═══════════════════════════════════════ -->
   <div id="menu-container">
-    <h1>AI Supercell Bros</h1>
+    <div class="scanlines"></div>
+
+    <div class="title-block">
+      <h1 class="game-title">ANYTHING<br><span class="title-accent">ARCADE</span></h1>
+      <p class="subtitle">⚡ PIXEL BRAWLER ⚡</p>
+    </div>
+
     <div class="controls-wrapper">
       <div class="menu-section">
-        <h2>Player 1 Controls</h2>
-        <label>Up: <input type="text" id="p1-up" value="W" maxlength="10"></label>
-        <label>Left: <input type="text" id="p1-left" value="A" maxlength="10"></label>
-        <label>Right: <input type="text" id="p1-right" value="D" maxlength="10"></label>
-        <label>Attack: <input type="text" id="p1-attack" value="F" maxlength="10"></label>
+        <h2><span class="pixel-icon">▶</span> P1 CONTROLS</h2>
+        <label>UP <input type="text" id="p1-up" value="W" maxlength="10"></label>
+        <label>LEFT <input type="text" id="p1-left" value="A" maxlength="10"></label>
+        <label>RIGHT <input type="text" id="p1-right" value="D" maxlength="10"></label>
+        <label>ATTACK <input type="text" id="p1-attack" value="F" maxlength="10"></label>
       </div>
       <div class="menu-section">
-        <h2>Player 2 Controls</h2>
-        <label>Up: <input type="text" id="p2-up" value="UP" maxlength="10"></label>
-        <label>Left: <input type="text" id="p2-left" value="LEFT" maxlength="10"></label>
-        <label>Right: <input type="text" id="p2-right" value="RIGHT" maxlength="10"></label>
-        <label>Attack: <input type="text" id="p2-attack" value="SHIFT" maxlength="10"></label>
+        <h2><span class="pixel-icon">▶</span> P2 CONTROLS</h2>
+        <label>UP <input type="text" id="p2-up" value="UP" maxlength="10"></label>
+        <label>LEFT <input type="text" id="p2-left" value="LEFT" maxlength="10"></label>
+        <label>RIGHT <input type="text" id="p2-right" value="RIGHT" maxlength="10"></label>
+        <label>ATTACK <input type="text" id="p2-attack" value="SHIFT" maxlength="10"></label>
       </div>
     </div>
+
     <div class="characters-wrapper">
       <div class="menu-section character-section">
-        <h2>🎨 Player 1 – Custom</h2>
-        <label>Photo: <input type="file" id="p1-sprite-image" accept="image/png, image/jpeg, image/webp"
-            style="margin-top: 5px;"></label>
+        <h2><span class="pixel-icon">♦</span> P1 SPRITE</h2>
+        <p class="hint-text">Upload photo for custom fighter</p>
+        <label class="file-label">
+          <span class="file-btn">CHOOSE FILE</span>
+          <input type="file" id="p1-sprite-image" accept="image/png, image/jpeg, image/webp">
+        </label>
         <div id="p1-sprite-preview-container" class="preview-container">
           <img id="p1-sprite-preview" class="preview-img" />
         </div>
       </div>
       <div class="menu-section character-section">
-        <h2>🎨 Player 2 – Custom</h2>
-        <label>Photo: <input type="file" id="p2-sprite-image" accept="image/png, image/jpeg, image/webp"
-            style="margin-top: 5px;"></label>
+        <h2><span class="pixel-icon">♦</span> P2 SPRITE</h2>
+        <p class="hint-text">Upload photo for custom fighter</p>
+        <label class="file-label">
+          <span class="file-btn">CHOOSE FILE</span>
+          <input type="file" id="p2-sprite-image" accept="image/png, image/jpeg, image/webp">
+        </label>
         <div id="p2-sprite-preview-container" class="preview-container">
           <img id="p2-sprite-preview" class="preview-img" />
         </div>
       </div>
     </div>
-    <div style="text-align: center; width: 100%; margin-bottom: 10px;">
-      <small id="sprite-server-status" style="color: #666;">Checking sprite server...</small>
+
+    <div class="server-status-row">
+      <small id="sprite-server-status">CHECKING SERVER...</small>
     </div>
+
     <div class="menu-section arena-section">
-      <h2>Arena Settings</h2>
-      <label>Base Image (Optional): <input type="file" id="bg-image" accept="image/png, image/jpeg, image/webp"
-          style="margin-top: 5px;"></label>
-      <label style="margin-top: 10px;">AI Background Prompt (or Edit Prompt):</label>
+      <h2><span class="pixel-icon">★</span> ARENA</h2>
+      <label>BASE IMAGE
+        <input type="file" id="bg-image" accept="image/png, image/jpeg, image/webp">
+      </label>
+      <label>AI PROMPT</label>
       <input type="text" id="bg-prompt"
         value="A chaotic cyberpunk fighting arena, 2d platformer background, high quality, dark lighting"
-        style="width: calc(100% - 12px); margin-top: 5px;">
-      <small style="color: #aaa; display: block; margin-top: 5px;">Powered by Gemini API (Imagen)</small>
+        class="prompt-input">
+      <small class="powered-by">POWERED BY GEMINI API</small>
     </div>
-    <button id="start-btn">Generate & Start Game</button>
-    <div id="loading" style="display: none;"><span id="loading-text">Generating background... Please wait...</span>
+
+    <button id="start-btn">
+      <span class="btn-icon">▶</span> START BATTLE
+    </button>
+
+    <p class="insert-coin blink">INSERT COIN TO CONTINUE</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- LOADING SCREEN                         -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="loading-screen" style="display: none;">
+    <div class="scanlines"></div>
+    <div class="loading-content">
+      <h2 class="loading-title">LOADING...</h2>
+      <div class="progress-bar-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <p id="loading-text" class="loading-status">INITIALIZING...</p>
+      <div class="fun-fact-box">
+        <span class="fun-fact-label">DID YOU KNOW?</span>
+        <p id="fun-fact-text" class="fun-fact-content">The first fighting game was "Heavyweight Champ" released in 1976!
+        </p>
+      </div>
+      <div class="pixel-animation">
+        <span class="pixel-dot dot1">■</span>
+        <span class="pixel-dot dot2">■</span>
+        <span class="pixel-dot dot3">■</span>
+        <span class="pixel-dot dot4">■</span>
+        <span class="pixel-dot dot5">■</span>
+      </div>
     </div>
   </div>
 
+  <!-- ═══════════════════════════════════════ -->
+  <!-- GAME SCREEN                            -->
+  <!-- ═══════════════════════════════════════ -->
   <div id="game-container" style="display: none;">
     <div id="ui-container">
-      <div class="health-container">
-        <div id="p1-health-bar" class="health-bar"></div>
-        <div id="p1-score" class="score">P1: 0%</div>
+      <!-- P1 HUD -->
+      <div class="hud-player hud-p1">
+        <div class="hud-name">P1</div>
+        <div class="hud-bar-track">
+          <div id="p1-health-bar" class="hud-bar-fill"></div>
+        </div>
+        <div id="p1-score" class="hud-dmg">0%</div>
       </div>
-      <div class="health-container">
-        <div id="p2-health-bar" class="health-bar"></div>
-        <div id="p2-score" class="score">P2: 0%</div>
+      <!-- VS -->
+      <div class="hud-vs">VS</div>
+      <!-- P2 HUD -->
+      <div class="hud-player hud-p2">
+        <div id="p2-score" class="hud-dmg">0%</div>
+        <div class="hud-bar-track">
+          <div id="p2-health-bar" class="hud-bar-fill"></div>
+        </div>
+        <div class="hud-name">P2</div>
       </div>
     </div>
     <div id="phaser-game"></div>
   </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 

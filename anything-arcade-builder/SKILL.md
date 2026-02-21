@@ -1,11 +1,11 @@
 ---
-name: ai-supercell-bros-builder
-description: Instructions, rules, and architecture for building and updating AI Supercell Bros, a 2D HTML5 Canvas platform fighter. Use this when prompted to implement or modify game features, characters, stages, weapons, or UI.
+name: anything-arcade-builder
+description: Instructions, rules, and architecture for building and updating Anything Arcade, a 2D HTML5 Canvas platform fighter. Use this when prompted to implement or modify game features, characters, stages, weapons, or UI.
 ---
 
-# AI Supercell Bros Builder
+# Anything Arcade Builder
 
-This skill provides rules, architectural decisions, and guidelines for building and updating the **AI Supercell Bros** web game based on its Game Design Document (GDD).
+This skill provides rules, architectural decisions, and guidelines for building and updating the **Anything Arcade** web game based on its Game Design Document (GDD).
 
 ## Core Architecture
 - **Environment**: Web Browser (Local HTML5 Canvas).

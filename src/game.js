@@ -17,13 +17,11 @@ export class GameScene extends Phaser.Scene {
     // Load P1 assets — custom sprites or default Girl SVGs
     const p1s = window.gameSettings && window.gameSettings.p1Sprites;
     if (p1s && p1s.idle) {
-      // Custom sprites generated from the sprite pipeline (blob URLs → SVG)
       this.load.svg('p1_stand', p1s.idle);
       this.load.svg('p1_walk', p1s.walk || p1s.idle);
       this.load.svg('p1_jump', p1s.jump || p1s.idle);
       this.load.svg('p1_punch', p1s.punch || p1s.idle);
     } else {
-      // Default Girl SVGs
       this.load.svg('p1_stand', '/Girl/player1_stand.svg');
       this.load.svg('p1_walk', '/Girl/player1_walk.svg');
       this.load.svg('p1_jump', '/Girl/player1_jump.svg');
@@ -43,8 +41,6 @@ export class GameScene extends Phaser.Scene {
       this.load.svg('p2_jump', '/Finnish/Jump.svg');
       this.load.svg('p2_punch', '/Finnish/Punch.svg');
     }
-
-    this.load.svg('platform_base', '/assets/models/platform.svg');
   }
 
   getKeyCode(keyStr) {
@@ -53,36 +49,20 @@ export class GameScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.KeyCodes[keyStr]) {
       return Phaser.Input.Keyboard.KeyCodes[keyStr];
     }
-    return Phaser.Input.Keyboard.KeyCodes.SPACE; // fallback
+    return Phaser.Input.Keyboard.KeyCodes.SPACE;
   }
 
   create() {
     // Background
-    const bg = this.add.image(400, 300, 'bg').setDisplaySize(800, 600);
+    this.add.image(400, 300, 'bg').setDisplaySize(800, 600);
 
-    // Platforms group
+    // Platforms group (invisible)
     this.platforms = this.physics.add.staticGroup();
 
-    // Environmental Slicing Logic
-    const createSlicedPlatform = (x, y, width, height, bgX, bgY) => {
-      const plat = this.add.sprite(x, y, 'bg');
-      plat.setCrop(bgX, bgY, width, height);
-      plat.setDisplaySize(width, height);
-      this.platforms.add(plat);
-      // Manually set physics body size
-      plat.body.setSize(width, height);
-      return plat;
-    };
-
-    // Ground: y=550, full width
-    createSlicedPlatform(400, 550, 800, 40, 0, 530);
-
-    // Catwalks: y=400
-    createSlicedPlatform(200, 400, 150, 20, 125, 390);
-    createSlicedPlatform(600, 400, 150, 20, 525, 390);
-
-    // Upper Signs: y=200
-    createSlicedPlatform(400, 200, 100, 15, 350, 190);
+    // Ground platform — invisible, full width at bottom
+    const ground = this.add.rectangle(400, 585, 800, 30, 0x000000, 0);
+    this.platforms.add(ground);
+    ground.body.setSize(800, 30);
 
     // Player 1
     this.p1 = this.physics.add.sprite(200, 100, 'p1_stand');
@@ -144,7 +124,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   handlePlayerMovement(player, keys, prefix) {
-    const moveSpeed = 350;
     const jumpForce = -750;
     let state = 'stand';
 
@@ -181,7 +160,6 @@ export class GameScene extends Phaser.Scene {
       player.setVelocityY(jumpForce);
     }
 
-    // Set Texture based on state
     player.setTexture(`${prefix}_${state}`);
   }
 
@@ -212,20 +190,17 @@ export class GameScene extends Phaser.Scene {
       this.applyKnockback(attacker, victim, 1.2);
 
       if (victim.health <= 0) {
-        this.gameOver(attacker === this.p1 ? "Player 1" : "Player 2");
+        this.gameOver(attacker === this.p1 ? "P1" : "P2");
       }
     }
     this.updateScoreUI();
   }
 
   applyHitEffect() {
-    // hitStop (physics pause)
     this.physics.world.pause();
     this.time.delayedCall(100, () => {
       this.physics.world.resume();
     });
-
-    // Camera shake
     this.cameras.main.shake(100, 0.015);
   }
 
@@ -245,11 +220,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   respawn(player) {
-    player.health -= 20; // Falling off costs health
+    player.health -= 20;
     player.damagePercent = 0;
 
     if (player.health <= 0) {
-      this.gameOver(player === this.p1 ? "Player 2" : "Player 1");
+      this.gameOver(player === this.p1 ? "P2" : "P1");
       return;
     }
 
@@ -263,26 +238,32 @@ export class GameScene extends Phaser.Scene {
     LogManager.log('FATALITY_INIT');
     this.scene.pause();
 
-    const gameOverText = document.createElement('div');
-    gameOverText.innerHTML = `<h1>${winner} Wins!</h1><button onclick="location.reload()" style="background:#ff6b6b;color:white;border:none;padding:10px 20px;font-size:16px;font-family:monospace;cursor:pointer;border-radius:5px;">Main Menu</button>`;
-    gameOverText.style.position = 'absolute';
-    gameOverText.style.top = '50%';
-    gameOverText.style.left = '50%';
-    gameOverText.style.transform = 'translate(-50%, -50%)';
-    gameOverText.style.backgroundColor = 'rgba(0,0,0,0.8)';
-    gameOverText.style.padding = '40px';
-    gameOverText.style.borderRadius = '10px';
-    gameOverText.style.textAlign = 'center';
-    gameOverText.style.zIndex = '100';
-    document.getElementById('game-container').appendChild(gameOverText);
+    // Arcade-style game over overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'game-over-overlay';
+    overlay.innerHTML = `
+      <div class="game-over-title">${winner} WINS!</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:#aaa;margin-bottom:20px;">K.O.</div>
+      <button class="game-over-btn" onclick="location.reload()">▶ REMATCH</button>
+      <button class="game-over-btn" onclick="location.reload()" style="margin-top:6px;background:linear-gradient(180deg,#333 0%,#222 100%);border-color:#555;">✕ MAIN MENU</button>
+    `;
+    document.getElementById('game-container').appendChild(overlay);
   }
 
   updateScoreUI() {
     if (this.p1ScoreText && this.p2ScoreText) {
-      this.p1ScoreText.innerText = `P1: ${this.p1.damagePercent}%`;
-      this.p2ScoreText.innerText = `P2: ${this.p2.damagePercent}%`;
+      this.p1ScoreText.innerText = `${this.p1.damagePercent}%`;
+      this.p2ScoreText.innerText = `${this.p2.damagePercent}%`;
       this.p1HealthBar.style.width = `${Math.max(0, this.p1.health)}%`;
       this.p2HealthBar.style.width = `${Math.max(0, this.p2.health)}%`;
+
+      // Change bar color when health is low
+      if (this.p1.health <= 30) {
+        this.p1HealthBar.style.background = 'repeating-linear-gradient(90deg, #ff4444 0px, #ff4444 6px, #cc0000 6px, #cc0000 12px)';
+      }
+      if (this.p2.health <= 30) {
+        this.p2HealthBar.style.background = 'repeating-linear-gradient(90deg, #ff4444 0px, #ff4444 6px, #cc0000 6px, #cc0000 12px)';
+      }
     }
   }
 }

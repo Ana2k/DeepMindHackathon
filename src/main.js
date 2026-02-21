@@ -3,48 +3,99 @@ import { GameScene } from './game.js';
 import { GoogleGenAI } from '@google/genai';
 import { generateSprites, checkSpriteServer } from './SpritePipeline.js';
 
-// — Preview uploaded P1 image —
-document.getElementById('p1-sprite-image').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  const previewContainer = document.getElementById('p1-sprite-preview-container');
-  const previewImg = document.getElementById('p1-sprite-preview');
-  if (file) {
-    const url = URL.createObjectURL(file);
-    previewImg.src = url;
-    previewContainer.style.display = 'block';
-  } else {
-    previewContainer.style.display = 'none';
-  }
-});
+// ═══════════════════════════════════════════════
+// FUN FACTS — shown during loading
+// ═══════════════════════════════════════════════
+const FUN_FACTS = [
+  "Street Fighter II was released in 1991 and sparked the fighting game craze!",
+  "The Konami Code (↑↑↓↓←→←→BA) was created in 1986 for Gradius.",
+  "Mario was originally called 'Jumpman' in the 1981 Donkey Kong arcade.",
+  "The first pixel art dates back to 1972 with the game Pong!",
+  "Pac-Man was originally called 'Puck Man' in Japan.",
+  "An AI generated your custom sprites using Gemini — the future is now!",
+  "The SNES could display 256 colors from a palette of 32,768.",
+  "Mortal Kombat sparked the creation of the ESRB rating system in 1994.",
+  "The Game Boy's screen had only 4 shades of green!",
+  "Each of your sprites is snapped to a 32×32 pixel grid for authenticity.",
+  "The original Street Fighter only had two playable characters!",
+  "Sonic the Hedgehog was designed to be played in 15-minute sessions.",
+  "Your sprites use a maximum of 6 colors — just like classic 8-bit games!",
+  "The NES could only show 25 colors on screen at the same time.",
+  "Double Dragon (1987) pioneered the side-scrolling beat 'em up genre.",
+  "In 1993, Doom ran at 35 frames per second — considered blazing fast!",
+  "Tetris has sold over 500 million copies across all platforms.",
+  "The AI analyzes your photo and describes you as a pixel art character!",
+];
 
-// — Preview uploaded P2 image —
-document.getElementById('p2-sprite-image').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  const previewContainer = document.getElementById('p2-sprite-preview-container');
-  const previewImg = document.getElementById('p2-sprite-preview');
-  if (file) {
-    const url = URL.createObjectURL(file);
-    previewImg.src = url;
-    previewContainer.style.display = 'block';
-  } else {
-    previewContainer.style.display = 'none';
-  }
-});
+let funFactInterval = null;
 
-// — Check sprite server health on load —
+function startFunFacts() {
+  const el = document.getElementById('fun-fact-text');
+  let lastIdx = -1;
+  const rotate = () => {
+    let idx;
+    do { idx = Math.floor(Math.random() * FUN_FACTS.length); } while (idx === lastIdx);
+    lastIdx = idx;
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = FUN_FACTS[idx];
+      el.style.opacity = '1';
+    }, 300);
+  };
+  rotate();
+  funFactInterval = setInterval(rotate, 4000);
+}
+
+function stopFunFacts() {
+  if (funFactInterval) clearInterval(funFactInterval);
+}
+
+function setProgress(pct) {
+  document.getElementById('progress-bar').style.width = `${Math.min(100, pct)}%`;
+}
+
+function setLoadingText(msg) {
+  document.getElementById('loading-text').textContent = msg;
+}
+
+// ═══════════════════════════════════════════════
+// PREVIEW UPLOADS
+// ═══════════════════════════════════════════════
+function setupPreview(inputId, containerId, imgId) {
+  document.getElementById(inputId).addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const container = document.getElementById(containerId);
+    const img = document.getElementById(imgId);
+    if (file) {
+      img.src = URL.createObjectURL(file);
+      container.style.display = 'block';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+}
+
+setupPreview('p1-sprite-image', 'p1-sprite-preview-container', 'p1-sprite-preview');
+setupPreview('p2-sprite-image', 'p2-sprite-preview-container', 'p2-sprite-preview');
+
+// ═══════════════════════════════════════════════
+// CHECK SPRITE SERVER
+// ═══════════════════════════════════════════════
 (async () => {
   const statusEl = document.getElementById('sprite-server-status');
   const isUp = await checkSpriteServer();
   if (isUp) {
-    statusEl.textContent = '✅ Sprite server connected';
-    statusEl.style.color = '#4caf50';
+    statusEl.textContent = '● SERVER ONLINE';
+    statusEl.style.color = '#00cc00';
   } else {
-    statusEl.textContent = '⚠️ Sprite server not running (npm run sprite-server)';
-    statusEl.style.color = '#ff9800';
+    statusEl.textContent = '✕ SERVER OFFLINE';
+    statusEl.style.color = '#ff4444';
   }
 })();
 
-// — Start game —
+// ═══════════════════════════════════════════════
+// START GAME
+// ═══════════════════════════════════════════════
 document.getElementById('start-btn').addEventListener('click', async () => {
   const p1Controls = {
     up: document.getElementById('p1-up').value.toUpperCase(),
@@ -65,53 +116,52 @@ document.getElementById('start-btn').addEventListener('click', async () => {
   const p1SpriteFile = document.getElementById('p1-sprite-image').files[0];
   const p2SpriteFile = document.getElementById('p2-sprite-image').files[0];
 
-  // Show loading
-  document.getElementById('start-btn').style.display = 'none';
-  document.getElementById('loading').style.display = 'block';
-  const loadingText = document.getElementById('loading-text');
+  // Switch to loading screen
+  document.getElementById('menu-container').style.display = 'none';
+  document.getElementById('loading-screen').style.display = 'flex';
+  startFunFacts();
+  setProgress(5);
 
-  // ——————————————————————————————
-  // 1. Generate Player 1 Custom Sprites
-  // ——————————————————————————————
+  // ————— 1. Generate P1 Sprites —————
   let p1Sprites = null;
   if (p1SpriteFile) {
     try {
-      loadingText.textContent = 'Generating P1 sprites...';
+      setLoadingText('GENERATING P1 SPRITES...');
+      setProgress(10);
       p1Sprites = await generateSprites(p1SpriteFile, (msg) => {
-        loadingText.textContent = `P1: ${msg}`;
+        setLoadingText(`P1: ${msg.toUpperCase()}`);
       });
-      console.log('✅ Custom P1 sprites generated');
+      setProgress(35);
     } catch (err) {
-      console.error('❌ P1 sprite generation failed:', err);
-      loadingText.textContent = 'P1 generation failed, using defaults...';
-      await new Promise(r => setTimeout(r, 1000));
+      console.error('P1 sprite generation failed:', err);
+      setLoadingText('P1 FAILED — USING DEFAULTS');
+      await new Promise(r => setTimeout(r, 1500));
     }
   }
+  setProgress(40);
 
-  // ——————————————————————————————
-  // 2. Generate Player 2 Custom Sprites
-  // ——————————————————————————————
+  // ————— 2. Generate P2 Sprites —————
   let p2Sprites = null;
   if (p2SpriteFile) {
     try {
-      loadingText.textContent = 'Generating P2 sprites...';
+      setLoadingText('GENERATING P2 SPRITES...');
+      setProgress(45);
       p2Sprites = await generateSprites(p2SpriteFile, (msg) => {
-        loadingText.textContent = `P2: ${msg}`;
+        setLoadingText(`P2: ${msg.toUpperCase()}`);
       });
-      console.log('✅ Custom P2 sprites generated');
+      setProgress(70);
     } catch (err) {
-      console.error('❌ P2 sprite generation failed:', err);
-      loadingText.textContent = 'P2 generation failed, using defaults...';
-      await new Promise(r => setTimeout(r, 1000));
+      console.error('P2 sprite generation failed:', err);
+      setLoadingText('P2 FAILED — USING DEFAULTS');
+      await new Promise(r => setTimeout(r, 1500));
     }
   }
+  setProgress(75);
 
-  // ——————————————————————————————
-  // 3. Generate Background
-  // ——————————————————————————————
-  loadingText.textContent = 'Generating background...';
+  // ————— 3. Generate Background —————
+  setLoadingText('GENERATING ARENA...');
 
-  let bgUrl = '/assets/backgrounds/bg.svg'; // fallback
+  let bgUrl = '/assets/backgrounds/bg.svg';
   let base64Image = null;
   let imageMimeType = null;
 
@@ -132,12 +182,7 @@ document.getElementById('start-btn').addEventListener('click', async () => {
 
       const parts = [];
       if (base64Image) {
-        parts.push({
-          inlineData: {
-            data: base64Image,
-            mimeType: imageMimeType
-          }
-        });
+        parts.push({ inlineData: { data: base64Image, mimeType: imageMimeType } });
       }
       if (bgPrompt.trim()) {
         parts.push({ text: bgPrompt });
@@ -145,32 +190,29 @@ document.getElementById('start-btn').addEventListener('click', async () => {
 
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
-        contents: [{
-          role: 'user',
-          parts: parts
-        }],
-        config: {
-          responseModalities: ['IMAGE']
-        }
+        contents: [{ role: 'user', parts }],
+        config: { responseModalities: ['IMAGE'] }
       });
 
       const part = response.candidates[0]?.content?.parts[0];
       if (part && part.inlineData) {
         const mimeType = part.inlineData.mimeType || 'image/png';
-        const base64Data = part.inlineData.data;
-        bgUrl = `data:${mimeType};base64,${base64Data}`;
-      } else {
-        console.error("Failed to generate image inline data from Gemini API.");
+        bgUrl = `data:${mimeType};base64,${part.inlineData.data}`;
       }
     } catch (e) {
-      console.error("Error making request to Gemini API, using fallback.", e);
+      console.error('Background generation failed, using fallback.', e);
     }
   }
 
-  // ——————————————————————————————
-  // 4. Launch Game
-  // ——————————————————————————————
-  document.getElementById('menu-container').style.display = 'none';
+  setProgress(95);
+  setLoadingText('GET READY...');
+  await new Promise(r => setTimeout(r, 800));
+  setProgress(100);
+  await new Promise(r => setTimeout(r, 400));
+
+  // ————— 4. Launch Game —————
+  stopFunFacts();
+  document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('game-container').style.display = 'block';
 
   window.gameSettings = {

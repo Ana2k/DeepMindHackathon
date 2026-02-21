@@ -1,6 +1,6 @@
-# Game Design Document: AI Supercell Bros
+# Game Design Document: Anything Arcade
 
-| **Project Name** | AI Supercell Bros |
+| **Project Name** | Anything Arcade |
 | --- | --- |
 | **Genre** | Platform Fighter / Brawler [cite: 2, 39] |
 | **Perspective** | 2D Fixed Screen (Side View) [cite: 2, 40] |
@@ -11,7 +11,7 @@
 ---
 
 ## 1. Summary
-**AI Supercell Bros** is a chaotic, highly customizable platform fighter designed to be played locally in a web browser [cite: 5, 43]. Players share a single keyboard or plug in multiple controllers, battling it out to increase their opponents' knockback multiplier and launch them off the screen [cite: 6, 44]. The game thrives on its unique AI integration and hyper-accessible controls [cite: 7, 45]. Players design their fighters using text prompts or image uploads that the AI maps onto a standard 2D collision skeleton [cite: 8, 46]. Before the match, players also queue up custom, AI-generated weapons to spawn at specific timestamps [cite: 9, 47]. 
+**Anything Arcade** is a chaotic, highly customizable platform fighter designed to be played locally in a web browser [cite: 5, 43]. Players share a single keyboard or plug in multiple controllers, battling it out to increase their opponents' knockback multiplier and launch them off the screen [cite: 6, 44]. The game thrives on its unique AI integration and hyper-accessible controls [cite: 7, 45]. Players design their fighters using text prompts or image uploads that the AI maps onto a standard 2D collision skeleton [cite: 8, 46]. Before the match, players also queue up custom, AI-generated weapons to spawn at specific timestamps [cite: 9, 47]. 
 
 ---
 
