@@ -1,78 +1,74 @@
-# 🕹️ Anything Arcade Bros 
+# Anything Arcade
 
-**Anything Arcade Bros** is an innovative, AI-powered platform fighter that brings the nostalgic 90s arcade experience into the future. Players can upload any photo or provide a text prompt to generate custom fighters and arenas, creating a truly personalized combat experience.
-
----
-
-## 🏆 Judging Criteria
-
-### 🌍 Impact (25%)
-**What is the project’s long-term potential for success, growth, and impact?**
-- **Hyper-Personalization:** By enabling users to turn personal photos, pets, or even inanimate objects into playable characters, Anything Arcade Bros eliminates the "static roster" limitation of traditional fighters.
-- **AI-Driven Creativity:** The project demonstrates a seamless integration of Generative AI (Google Gemini) into the game development workflow, lowering the barrier for creator-generated content.
-- **Problem Statement Fit:** Addresses the intersection of **Generative AI and Real-time Entertainment**, showing how multimodal models can go beyond text output to generate functional, game-ready assets (SVGs, backgrounds).
-- **Target Audience:** Casual gamers, streamers looking for unique interactive content, and collectors of personalized digital assets.
-
-### 🎮 Demo (50%)
-**How well has the team implemented the idea? Does it work?**
-- **Full Working Repository:** A robust local environment using **Vite + Phaser.js** for the game engine and **Flask** for the backend sprite pipeline.
-- **End-to-End Pipeline:**
-    1. **Character Generation:** Upload a photo ➔ AI analyzes features ➔ AI generates 4 distinct animation sprites (Idle, Walk, Punch, Jump) ➔ Sprites are snapped to a 32x32 pixel grid ➔ Resulting SVGs are loaded into the game.
-    2. **Arena Generation:** Enter a prompt ➔ Gemini generates a high-quality arcade background ➔ Collision platforms are dynamically mapped.
-- **Fluid Combat Mechanics:** Implements a momentum-based physics system with:
-    - Dynamic health bars and damage percentages.
-    - Consistent knockback physics (higher % = more launch).
-    - Responsive collision detection and blast zones.
-    - Retro "Fatality" style Game Over screens.
-- **Visual Excellence:** Extremely polished 90s arcade aesthetic featuring:
-    - **Scanline overlays** and chromatic aberration.
-    - **Press Start 2P** pixelated typography.
-    - **Neon rim lighting** and 3D beveled metallic HUDs.
-    - Blinking "INSERT COIN" and "VS" animations.
-
-### 💡 Creativity (15%)
-**Is the project’s concept innovative? Is their demo unique?**
-- **Vibe-Coding Methodology:** This project was built using a "vibe-coding" approach—prioritizing intent, aesthetics, and rapid iteration over boilerplate. By leveraging **Antigravity** and **Gemini 3-Flash**, the team focused on core gameplay "vibe" and visual polish, allowing for high-impact creative decisions in record time.
-- **Prompt-Powered Arsenal:** The concept of "Anything Arcade" means the game is a blank canvas. The innovation lies in the **Sprite Pipeline Server**, which enforces strict pixel-art rules via AI to ensure generated assets look native to the 16-bit era.
-- **Dynamic Item Spawning:** Players can "engineer" their advantages by queuing custom, AI-generated weapons that spawn at specific timestamps.
-
-### 🎤 Pitch (10%)
-**How effectively does the team present their project?**
-Anything Arcade Bros is not just a game; it's a **generative engine for nostalgia**. We've combined the latest in multimodal AI with the timeless fun of platform brawlers. Our pitch focuses on the "WOW" factor of seeing yourself transformed into a pixel-art hero in a custom-built cyberpunk Tokyo alleyway.
+Anything Arcade is an innovative, AI-powered platform fighter that integrates 1990s arcade-style gameplay with modern generative AI. By leveraging the Google Gemini model family, the application enables users to generate custom fighters and interactive environments through multimodal inputs.
 
 ---
 
-## 🛠️ Technical Deep Dive
+## Pillar Technical Features
 
-### ✨ The Vibe-Code Stack
-Anything Arcade Bros was developed through an accelerated "vibe-coding" workflow using:
-- **Antigravity:** The primary AI agent coordinator for rapid architectural drafting and system integration.
-- **Gemini 3-Flash:** The high-speed backbone for real-time asset generation and logic validation.
-- **Nanobanana:** Orchestration layer used to maintain the "chaos-under-control" development pace.
+### 1. Dynamic Arena Generation (Implemented)
+Anything Arcade utilizes generative AI to transform static game stages into dynamic environments.
+- **Implementation**: The system uses **Gemini 2.5-Flash** to process multimodal inputs. Users can provide text-based descriptions or upload photographic seeds. The AI synthesizes a high-fidelity 2D background, while the game engine programmatically maps secondary collision layers.
 
-### 🗄️ Backend: Sprite Pipeline Server
-- **Tech:** Python, Flask, PIL (Pillow), Google GenAI SDK.
-- **Process:**
-    - **Analysis:** Uses **Gemini 3-Flash** to extract character details (hair, clothing, skin).
-    - **Generation:** Uses **Gemini 3-Flash** to draw frames based on a `pixel_grid_32x32.png`.
-    - **Post-Processing:** Snaps raw AI output to grids, enforces a 6-color palette, and converts to optimized SVGs.
+### 2. Character Sprite Pipeline (Implemented)
+The core technical innovation is the automated conversion of high-resolution user photographs into performance-optimized 16-bit pixel art.
+- **Analysis and Feature Extraction**: **Gemini 2.5-Flash** performs an initial analysis of the source photograph to extract character-specific "style DNA" (including anatomical structure and color palette constants). This ensures visual consistency across all animation states.
+- **Frame Synthesis**: The system generates four distinct animation frames (Idle, Walk, Punch, Jump) using **Gemini-3-Pro-Image-Preview**. A 32x32 pixel grid is provided as a visual reference, ensuring character dimensions remain proportional to the game environment.
+- **Post-Processing and Optimization**: 
+    - **Grid Conformance**: A custom PIL-based algorithm samples the AI output to enforce perfect 32x32 alignment, removing artifacts and anti-aliasing.
+    - **Color Synchronization**: The system extracts a limited color palette from the initial frame and programmatically enforces it across all subsequent frames to prevent visual inconsistency.
+    - **Vector Serialization**: Final assets are converted into optimized SVG strings for zero-latency loading within the Phaser.js engine.
 
-### 🕹️ Frontend: Game Engine
-- **Tech:** Phaser.js (Arcade Physics), Vite, Shared-Keyboard Input.
-- **Features:** 
-    - **Custom HUD:** 3D beveled metallic frames with dynamic health tracking.
-    - **Physics:** Momentum-centric brawling that rewards movement over complex combos.
-    - **Asset Loading:** Asynchronous fetch requests for real-time asset generation.
-
-### 🎨 Visual Theme
-- **Style:** 16-bit Retro Arcade (Neo-Tokyo Aesthetic).
-- **Effects:** Scanlines, chromatic aberration, flickering neon, and "Press Start 2P" typography.
-- **Assets:** Appropriate 90s arcade style gaming console images and custom-generated sprites.
+### 3. Prompt-Driven Weapons (Roadmap)
+A conceptualized feature designed to allow users to engineer tactical advantages.
+- **Concept**: Future iterations will enable users to generate weapons via text prompts. The AI will define physical properties such as mass, hitbox coordinates, and damage modifiers.
+- **Status**: The underlying architecture supports dynamic spawning; however, this feature is currently in the late-stage design phase.
 
 ---
 
-## 🚀 Getting Started
-1. Install dependencies: `npm install`
-2. Set up your `.env` with `GEMINI_API_KEY`.
-3. Start the engine: `npm run dev`
-4. **Insert Coin and Fight!**
+## Technical Architecture
+
+### Development Methodology
+Anything Arcade was developed using an accelerated integration workflow focused on rapid architectural drafting and system unification via the Gemini family of models.
+
+### Backend: Sprite Generation Pipeline
+- **Stack**: Python, Flask, PIL (Pillow), Google GenAI SDK, python-dotenv.
+- **Operational Sequence**: 
+  1. Image Ingestion
+  2. Character DNA Extraction
+  3. Sequential Frame Generation (Idle, Walk, Punch, Jump)
+  4. Grid/Color Optimization
+  5. Manifest Serialization.
+
+### Frontend: Engine and Interface
+- **Stack**: Phaser.js (Arcade Physics Engine), Vite, Standard CSS.
+- **Features**: 
+    - **Arcade Interface**: 16-bit visual design featuring segmented health tracking and traditional arcade typography.
+    - **Physics Model**: Momentum-centric mechanics where velocity is mapped directly to knockback magnitude.
+    - **Dynamic Loading**: An interactive loading screen provides historical arcade context during AI processing cycles.
+
+---
+
+## Installation and Deployment
+
+### 1. Frontend Dependencies
+```bash
+npm install
+```
+
+### 2. Backend Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Environment Configuration
+Create a `.env` file in the root directory and configure the API key:
+```env
+GEMINI_API_KEY=your_api_key_here
+```
+
+### 4. Application Launch
+```bash
+npm start
+```
+*This command executes the Vite development server and the Python sprite server concurrently.*
