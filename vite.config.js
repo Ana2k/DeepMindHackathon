@@ -5,6 +5,11 @@ export default defineConfig(({ mode }) => {
   return {
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+    },
+    server: {
+      fs: {
+        allow: ['.', 'Girl', 'Finnish', 'finnish_character_svgs']
+      }
     }
   };
 });

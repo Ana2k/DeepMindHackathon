@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { LogManager } from './LogManager.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -12,11 +13,20 @@ export class GameScene extends Phaser.Scene {
     } else {
       this.load.svg('bg', '/assets/backgrounds/bg.svg');
     }
-    
-    // Load placeholder assets from public folder
-    this.load.svg('p1', '/assets/models/p1.svg');
-    this.load.svg('p2', '/assets/models/p2.svg');
-    this.load.svg('platform', '/assets/models/platform.svg');
+
+    // Load P1 (Girl) assets from absolute paths
+    this.load.svg('p1_stand', '/Girl/player1_stand.svg');
+    this.load.svg('p1_walk', '/Girl/player1_walk.svg');
+    this.load.svg('p1_jump', '/Girl/player1_jump.svg');
+    this.load.svg('p1_punch', '/Girl/player1_punch.svg');
+
+    // Load P2 (Finnish) assets from absolute paths
+    this.load.svg('p2_stand', '/Finnish/Stand.svg');
+    this.load.svg('p2_walk', '/Finnish/Walk.svg');
+    this.load.svg('p2_jump', '/Finnish/Jump.svg');
+    this.load.svg('p2_punch', '/Finnish/Punch.svg');
+
+    this.load.svg('platform_base', '/assets/models/platform.svg');
   }
 
   getKeyCode(keyStr) {
@@ -30,197 +40,231 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     // Background
-    this.add.image(400, 300, 'bg').setDisplaySize(800, 600);
+    const bg = this.add.image(400, 300, 'bg').setDisplaySize(800, 600);
 
     // Platforms group
     this.platforms = this.physics.add.staticGroup();
-    
-    // Main ground platform - Centered so players can fall off edges easily
-    this.platforms.create(400, 450, 'platform').setScale(2, 1).refreshBody();
-    
-    // Floating platforms
-    this.platforms.create(250, 300, 'platform').setScale(0.8, 1).refreshBody();
-    this.platforms.create(550, 300, 'platform').setScale(0.8, 1).refreshBody();
-    this.platforms.create(400, 150, 'platform').setScale(0.5, 1).refreshBody();
+
+    // Environmental Slicing Logic
+    const createSlicedPlatform = (x, y, width, height, bgX, bgY) => {
+      const plat = this.add.sprite(x, y, 'bg');
+      plat.setCrop(bgX, bgY, width, height);
+      plat.setDisplaySize(width, height);
+      this.platforms.add(plat);
+      // Manually set physics body size
+      plat.body.setSize(width, height);
+      return plat;
+    };
+
+    // Ground: y=550, full width
+    createSlicedPlatform(400, 550, 800, 40, 0, 530);
+
+    // Catwalks: y=400
+    createSlicedPlatform(200, 400, 150, 20, 125, 390);
+    createSlicedPlatform(600, 400, 150, 20, 525, 390);
+
+    // Upper Signs: y=200
+    createSlicedPlatform(400, 200, 100, 15, 350, 190);
 
     // Player 1
-    this.p1 = this.physics.add.sprite(200, 100, 'p1');
+    this.p1 = this.physics.add.sprite(200, 100, 'p1_stand');
+    this.p1.setScale(0.15);
     this.p1.setBounce(0.1);
-    this.p1.setCollideWorldBounds(false); // Can fall off the screen
+    this.p1.setCollideWorldBounds(true);
     this.p1.damagePercent = 0;
-    this.p1.stocks = 3;
+    this.p1.health = 100;
+    this.p1.isPunching = false;
 
     // Player 2
-    this.p2 = this.physics.add.sprite(600, 100, 'p2');
+    this.p2 = this.physics.add.sprite(600, 100, 'p2_stand');
+    this.p2.setScale(0.15);
     this.p2.setBounce(0.1);
-    this.p2.setCollideWorldBounds(false); // Can fall off the screen
+    this.p2.setCollideWorldBounds(true);
     this.p2.damagePercent = 0;
-    this.p2.stocks = 3;
+    this.p2.health = 100;
+    this.p2.isPunching = false;
 
     // Collisions
     this.physics.add.collider(this.p1, this.platforms);
     this.physics.add.collider(this.p2, this.platforms);
     this.physics.add.collider(this.p1, this.p2, this.handlePlayerCollision, null, this);
 
-    // Default Controls
-    let p1Config = { up: 'W', left: 'A', right: 'D', attack: 'F' };
-    let p2Config = { up: 'UP', left: 'LEFT', right: 'RIGHT', attack: 'SHIFT' };
-
-    if (window.gameSettings) {
-      p1Config = window.gameSettings.p1Controls;
-      p2Config = window.gameSettings.p2Controls;
-    }
-
     // Controls P1
-    this.keysP1 = this.input.keyboard.addKeys({
-      up: this.getKeyCode(p1Config.up),
-      down: this.getKeyCode('S'), // Hardcoded down just in case
-      left: this.getKeyCode(p1Config.left),
-      right: this.getKeyCode(p1Config.right),
-      attack: this.getKeyCode(p1Config.attack)
-    });
+    this.keysP1 = {
+      up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+      left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+      right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+      punch: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z)
+    };
 
     // Controls P2
-    this.keysP2 = this.input.keyboard.addKeys({
-      up: this.getKeyCode(p2Config.up),
-      down: this.getKeyCode('DOWN'), // Hardcoded down just in case
-      left: this.getKeyCode(p2Config.left),
-      right: this.getKeyCode(p2Config.right),
-      attack: this.getKeyCode(p2Config.attack)
-    });
+    this.keysP2 = {
+      up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
+      left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
+      right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
+      punch: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X)
+    };
 
     // UI elements references
     this.p1ScoreText = document.getElementById('p1-score');
     this.p2ScoreText = document.getElementById('p2-score');
+    this.p1HealthBar = document.getElementById('p1-health-bar');
+    this.p2HealthBar = document.getElementById('p2-health-bar');
 
     this.updateScoreUI();
   }
 
   update() {
-    this.handlePlayerMovement(this.p1, this.keysP1);
-    this.handlePlayerMovement(this.p2, this.keysP2);
+    this.handlePlayerMovement(this.p1, this.keysP1, 'p1');
+    this.handlePlayerMovement(this.p2, this.keysP2, 'p2');
 
     this.checkBlastZones(this.p1);
     this.checkBlastZones(this.p2);
+
+    this.handleTrailingGhost(this.p1);
+    this.handleTrailingGhost(this.p2);
   }
 
-  handlePlayerMovement(player, keys) {
+  handlePlayerMovement(player, keys, prefix) {
     const moveSpeed = 350;
     const jumpForce = -750;
+    let state = 'stand';
 
-    // Acceleration-based movement for momentum
+    // Punching
+    if (keys.punch.isDown && !player.isPunching) {
+      player.isPunching = true;
+      player.setTexture(`${prefix}_punch`);
+      this.time.delayedCall(200, () => { player.isPunching = false; });
+      return;
+    }
+
+    if (player.isPunching) return;
+
+    // Movement
     if (keys.left.isDown) {
       player.setAccelerationX(-2000);
-      if (player.body.velocity.x < -moveSpeed && player.body.touching.down) {
-        player.setVelocityX(-moveSpeed);
-      }
+      player.setFlipX(true);
+      state = 'walk';
     } else if (keys.right.isDown) {
       player.setAccelerationX(2000);
-      if (player.body.velocity.x > moveSpeed && player.body.touching.down) {
-        player.setVelocityX(moveSpeed);
-      }
+      player.setFlipX(false);
+      state = 'walk';
     } else {
       player.setAccelerationX(0);
-      // Friction
-      if (player.body.touching.down) {
-        player.setDragX(3000);
-      } else {
-        player.setDragX(500); // Less air drag
-      }
+      player.setDragX(player.body.touching.down ? 3000 : 500);
+      state = 'stand';
+    }
+
+    if (!player.body.touching.down) {
+      state = 'jump';
     }
 
     if (keys.up.isDown && player.body.touching.down) {
       player.setVelocityY(jumpForce);
     }
+
+    // Set Texture based on state
+    player.setTexture(`${prefix}_${state}`);
+  }
+
+  handleTrailingGhost(player) {
+    if (Math.abs(player.body.velocity.x) > 500 || Math.abs(player.body.velocity.y) > 500) {
+      const ghost = this.add.sprite(player.x, player.y, player.texture.key);
+      ghost.setScale(player.scaleX, player.scaleY);
+      ghost.setFlipX(player.flipX);
+      ghost.setAlpha(0.5);
+      this.tweens.add({
+        targets: ghost,
+        alpha: 0,
+        duration: 200,
+        onComplete: () => ghost.destroy()
+      });
+    }
   }
 
   handlePlayerCollision(p1, p2) {
-    const speedDiffX = Math.abs(p1.body.velocity.x - p2.body.velocity.x);
-    
-    // Stomping mechanic
-    if (p1.body.touching.down && p2.body.touching.up) {
-        p2.damagePercent += 15;
-        p2.setVelocityY(900); // Spike downward
-        p1.setVelocityY(-500); // Bounce off
-        this.applyKnockback(p1, p2, 0.5); // Add slight horizontal push
-    } else if (p2.body.touching.down && p1.body.touching.up) {
-        p1.damagePercent += 15;
-        p1.setVelocityY(900);
-        p2.setVelocityY(-500);
-        this.applyKnockback(p2, p1, 0.5);
-    } 
-    // High-speed collision mechanic
-    else if (speedDiffX > 250) {
-        if (Math.abs(p1.body.velocity.x) > Math.abs(p2.body.velocity.x)) {
-            p2.damagePercent += 8;
-            this.applyKnockback(p1, p2, 1);
-        } else {
-            p1.damagePercent += 8;
-            this.applyKnockback(p2, p1, 1);
-        }
-    }
+    if (p1.isPunching || p2.isPunching) {
+      const attacker = p1.isPunching ? p1 : p2;
+      const victim = p1.isPunching ? p2 : p1;
 
+      victim.health -= 10;
+      victim.damagePercent += 15;
+
+      this.applyHitEffect();
+      this.applyKnockback(attacker, victim, 1.2);
+
+      if (victim.health <= 0) {
+        this.gameOver(attacker === this.p1 ? "Player 1" : "Player 2");
+      }
+    }
     this.updateScoreUI();
+  }
+
+  applyHitEffect() {
+    // hitStop (physics pause)
+    this.physics.world.pause();
+    this.time.delayedCall(100, () => {
+      this.physics.world.resume();
+    });
+
+    // Camera shake
+    this.cameras.main.shake(100, 0.015);
   }
 
   applyKnockback(attacker, victim, multiplierModifier = 1) {
     const knockbackBaseX = 400;
     const knockbackBaseY = -300;
-    
-    // The higher the damage, the more the knockback multiplier scales
     const multiplier = (1 + (victim.damagePercent / 40)) * multiplierModifier;
-    
     const dirX = Math.sign(victim.x - attacker.x) || 1;
-    
     victim.setVelocityX(dirX * knockbackBaseX * multiplier);
     victim.setVelocityY(knockbackBaseY * multiplier);
   }
 
   checkBlastZones(player) {
-    // If player falls off the main platform and passes y > 600, they die (blast zone)
-    // Or if they get knocked too far off-screen horizontally.
     if (player.x < -150 || player.x > 950 || player.y > 650 || player.y < -400) {
-        this.respawn(player);
+      this.respawn(player);
     }
   }
 
   respawn(player) {
-    player.stocks -= 1;
+    player.health -= 20; // Falling off costs health
     player.damagePercent = 0;
-    
-    if (player.stocks <= 0) {
-        const winner = player === this.p1 ? "Player 2" : "Player 1";
-        this.scene.pause();
-        
-        // Simple Game Over UI
-        const gameOverText = document.createElement('div');
-        gameOverText.innerHTML = `<h1>${winner} Wins!</h1><button onclick="location.reload()" style="background:#ff6b6b;color:white;border:none;padding:10px 20px;font-size:16px;font-family:monospace;cursor:pointer;border-radius:5px;">Main Menu</button>`;
-        gameOverText.style.position = 'absolute';
-        gameOverText.style.top = '50%';
-        gameOverText.style.left = '50%';
-        gameOverText.style.transform = 'translate(-50%, -50%)';
-        gameOverText.style.backgroundColor = 'rgba(0,0,0,0.8)';
-        gameOverText.style.padding = '40px';
-        gameOverText.style.borderRadius = '10px';
-        gameOverText.style.textAlign = 'center';
-        gameOverText.style.zIndex = '100';
-        document.getElementById('game-container').appendChild(gameOverText);
-        
-        this.updateScoreUI();
-        return;
+
+    if (player.health <= 0) {
+      this.gameOver(player === this.p1 ? "Player 2" : "Player 1");
+      return;
     }
 
-    // Reset physics state
     player.setPosition(400, 100);
     player.setVelocity(0, 0);
     player.setAcceleration(0, 0);
     this.updateScoreUI();
   }
 
+  gameOver(winner) {
+    LogManager.log('FATALITY_INIT');
+    this.scene.pause();
+
+    const gameOverText = document.createElement('div');
+    gameOverText.innerHTML = `<h1>${winner} Wins!</h1><button onclick="location.reload()" style="background:#ff6b6b;color:white;border:none;padding:10px 20px;font-size:16px;font-family:monospace;cursor:pointer;border-radius:5px;">Main Menu</button>`;
+    gameOverText.style.position = 'absolute';
+    gameOverText.style.top = '50%';
+    gameOverText.style.left = '50%';
+    gameOverText.style.transform = 'translate(-50%, -50%)';
+    gameOverText.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    gameOverText.style.padding = '40px';
+    gameOverText.style.borderRadius = '10px';
+    gameOverText.style.textAlign = 'center';
+    gameOverText.style.zIndex = '100';
+    document.getElementById('game-container').appendChild(gameOverText);
+  }
+
   updateScoreUI() {
     if (this.p1ScoreText && this.p2ScoreText) {
-        this.p1ScoreText.innerText = `P1: ${this.p1.damagePercent}% | Stocks: ${this.p1.stocks}`;
-        this.p2ScoreText.innerText = `P2: ${this.p2.damagePercent}% | Stocks: ${this.p2.stocks}`;
+      this.p1ScoreText.innerText = `P1: ${this.p1.damagePercent}%`;
+      this.p2ScoreText.innerText = `P2: ${this.p2.damagePercent}%`;
+      this.p1HealthBar.style.width = `${Math.max(0, this.p1.health)}%`;
+      this.p2HealthBar.style.width = `${Math.max(0, this.p2.health)}%`;
     }
   }
 }
