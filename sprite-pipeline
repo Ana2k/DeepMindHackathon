@@ -1,0 +1,355 @@
+import os
+import sys
+import time
+import argparse
+from io import BytesIO
+from PIL import Image, ImageDraw
+import xml.etree.ElementTree as ET
+from google import genai
+
+# ———————————————————————
+# CONFIGURATION
+# ———————————————————————
+
+API_KEY = os.getenv("GOOGLE_GENAI_API_KEY")
+REF_PHOTO = "user_image_32x32.png"
+GRID_IMAGE = "pixel_grid_32x32.png"
+
+OUTPUT_FILES = [
+    "sprite_idle",
+    "sprite_walk_right",
+    "sprite_punch",
+    "sprite_jump"
+]
+
+# ———————————————————————
+# DYNAMIC PROMPTS
+# ———————————————————————
+
+def get_prompts(character_description):
+    """Generates the prompts dynamically based on the AI's description of the user image."""
+    
+    # The base rule requested by the user + anti-checkerboard rules
+    base_instruction = """Using the provided pixel grid, completely fill in the necessary squares to form a perfect pixel art image"""
+    
+    strict_rules = """
+STRICT PIXEL RULES:
+- Perfectly align to the squares of the provided grid.
+- Hard square pixels only. No anti-aliasing.
+- BACKGROUND: Solid pure white background. ABSOLUTELY NO checkerboard patterns, NO grey squares, NO fake transparency grids.
+- Maximum 6 colors total.
+- Flat solid colors only.
+- Clean, readable silhouette."""
+
+    return [
+        # 0: Base (Idle)
+        f"""{base_instruction} of a standing character.
+
+CHARACTER DESIGN (Based on uploaded photo):
+{character_description}
+- Simple 8-bit face (dot eyes)
+
+ACTION:
+- Neutral standing pose
+- Facing right
+- Arms relaxed at sides
+{strict_rules}""",
+
+        # 1: Walk
+        f"""{base_instruction} of a walking animation frame of the SAME character.
+
+Keep character design exact to previous sprite.
+
+ACTION:
+- Facing right
+- One leg stepping forward, the other leg back
+- Opposite arm swinging forward
+- Dynamic walking stride
+{strict_rules}""",
+
+        # 2: Fight (Punch)
+        f"""{base_instruction} of a punch attack frame of the SAME character.
+
+Keep character design exact to previous sprite.
+
+ACTION:
+- Facing right
+- One arm fully extended forward (punch)
+- Other arm slightly pulled back
+- Slight forward lean
+- Determined facial expression
+{strict_rules}""",
+
+        # 3: Jump
+        f"""{base_instruction} of a jump animation frame of the SAME character.
+
+Keep character design exact to previous sprite.
+
+ACTION:
+- Both feet off the ground
+- Knees bent mid-air
+- Arms slightly raised for balance
+{strict_rules}"""
+    ]
+
+# ———————————————————————
+# IMAGE PROCESSING LOGIC
+# ———————————————————————
+
+def snap_to_grid(img, grid_size=32):
+    """
+    Forces the AI output to perfectly conform to a mathematical 32x32 grid.
+    This eliminates varying resolutions/pixel sizes and fake checkerboards.
+    """
+    print("    📏 Snapping AI output perfectly to grid structure to ensure uniform pixel size...")
+    img = img.convert("RGBA")
+    width, height = img.size
+    
+    # Calculate the size of each grid cell based on the image's native resolution
+    cell_w = width / grid_size
+    cell_h = height / grid_size
+    
+    # Create a new blank canvas
+    snapped_img = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+    draw = ImageDraw.Draw(snapped_img)
+    
+    for y in range(grid_size):
+        for x in range(grid_size):
+            # Sample the exact center of the AI's drawn grid cell
+            sample_x = int((x + 0.5) * cell_w)
+            sample_y = int((y + 0.5) * cell_h)
+            
+            # Prevent out-of-bounds
+            sample_x = min(sample_x, width - 1)
+            sample_y = min(sample_y, height - 1)
+            
+            r, g, b, a = img.getpixel((sample_x, sample_y))
+            
+            # Paint a PERFECT square block back onto the canvas
+            top_left = (int(x * cell_w), int(y * cell_h))
+            bottom_right = (int((x + 1) * cell_w), int((y + 1) * cell_h))
+            draw.rectangle([top_left, bottom_right], fill=(r, g, b, a))
+            
+    return snapped_img
+
+def snap_colors_to_palette(img, base_img, bg_threshold=185):
+    """Forces the current image to strictly use only the colors found in the base image."""
+    print("    🎨 Snapping colors to match the Base Idle sprite perfectly...")
+    
+    base_pixels = base_img.convert("RGBA").getdata()
+    valid_colors = set()
+    for r, g, b, a in base_pixels:
+        if a >= 128 and not (r > bg_threshold and g > bg_threshold and b > bg_threshold):
+            valid_colors.add((r, g, b))
+            
+    if not valid_colors:
+        return img 
+        
+    valid_colors = list(valid_colors)
+    
+    img = img.convert("RGBA")
+    pixels = img.load()
+    width, height = img.size
+    
+    color_cache = {}
+    
+    for y in range(height):
+        for x in range(width):
+            r, g, b, a = pixels[x, y]
+            if a < 128 or (r > bg_threshold and g > bg_threshold and b > bg_threshold):
+                continue
+            
+            color_tuple = (r, g, b)
+            if color_tuple in color_cache:
+                nearest_color = color_cache[color_tuple]
+            else:
+                nearest_color = min(valid_colors, key=lambda c: (c[0]-r)**2 + (c[1]-g)**2 + (c[2]-b)**2)
+                color_cache[color_tuple] = nearest_color
+                
+            pixels[x, y] = (nearest_color[0], nearest_color[1], nearest_color[2], a)
+            
+    return img
+
+def convert_to_svg(img, output_path, bg_threshold=185):
+    """Converts the Image to an optimized SVG with transparent background."""
+    print(f"    🧹 Converting to SVG: {output_path}")
+
+    img = img.convert("RGBA")
+    width, height = img.size
+    pixels = img.load()
+
+    svg = ET.Element("svg", {
+        "xmlns": "http://www.w3.org/2000/svg",
+        "width": str(width),
+        "height": str(height),
+        "viewBox": f"0 0 {width} {height}"
+    })
+
+    for y in range(height):
+        x = 0
+        while x < width:
+            r, g, b, a = pixels[x, y]
+
+            if a < 128 or (r > bg_threshold and g > bg_threshold and b > bg_threshold):
+                x += 1
+                continue
+
+            color = (r, g, b)
+            run = 1
+            while x + run < width:
+                nr, ng, nb, na = pixels[x + run, y]
+                if na >= 128 and (nr, ng, nb) == color:
+                    run += 1
+                else:
+                    break
+
+            ET.SubElement(svg, "rect", {
+                "x": str(x),
+                "y": str(y),
+                "width": str(run),
+                "height": "1",
+                "fill": f"#{r:02x}{g:02x}{b:02x}"
+            })
+            x += run
+
+    tree = ET.ElementTree(svg)
+    tree.write(output_path, xml_declaration=True, encoding="unicode")
+    
+    size_kb = os.path.getsize(output_path) / 1024
+    print(f"    ✨ Done! SVG Size: {size_kb:.1f}KB")
+
+# ———————————————————————
+# GENERATION LOGIC
+# ———————————————————————
+
+def analyze_character(client, photo_img):
+    """Uses Gemini 2.5 Flash to describe the user's uploaded photo."""
+    print("\n👁️  STEP 1: Analyzing user image to extract character design...")
+    start_time = time.time()
+    
+    prompt = """Analyze this image and describe the person concisely for a 2D pixel art character design. 
+    Include: Gender, hair color/style, skin tone, and specific clothing items with their colors. 
+    Keep it under 40 words. Format as a bulleted list."""
+    
+    response = client.models.generate_content(
+        model="gemini-2.5-flash", 
+        contents=[prompt, photo_img]
+    )
+    
+    description = response.text.strip()
+    elapsed = time.time() - start_time
+    
+    print(f"  ✅ Description generated in {elapsed:.2f}s:\n")
+    for line in description.split('\n'):
+        print(f"      {line}")
+        
+    return description, elapsed
+
+def generate_and_process_sprites(bg_threshold):
+    if not API_KEY:
+        print("🛑 ERROR: Set the GOOGLE_GENAI_API_KEY environment variable!")
+        sys.exit(1)
+
+    client = genai.Client(api_key=API_KEY)
+    benchmarks = {}
+    
+    # Load images
+    photo_img = Image.open(REF_PHOTO)
+    grid_img = Image.open(GRID_IMAGE)
+
+    # 1. Analyze Image
+    description, vision_time = analyze_character(client, photo_img)
+    benchmarks["Image Analysis (Gemini Flash)"] = vision_time
+
+    # 2. Get Dynamic Prompts
+    prompts = get_prompts(description)
+    base_idle_sprite = None
+
+    print("\n🎨 STEP 2: Generating Sprites...")
+    
+    for i, prompt in enumerate(prompts):
+        sprite_start_time = time.time()
+        print(f"\n  🧠 Generating {OUTPUT_FILES[i]} ({i+1}/{len(prompts)})...")
+        
+        contents = [prompt, photo_img, grid_img]
+        if i > 0 and base_idle_sprite is not None:
+            contents.append(base_idle_sprite)
+
+        response = client.models.generate_content(
+            model="gemini-3-pro-image-preview",
+            contents=contents,
+        )
+
+        png_path = f"{OUTPUT_FILES[i]}.png"
+        svg_path = f"{OUTPUT_FILES[i]}.svg"
+        saved = False
+        
+        if response.candidates and response.candidates[0].content.parts:
+            for part in response.candidates[0].content.parts:
+                if part.inline_data is not None:
+                    # Load Raw Image
+                    processed_img = Image.open(BytesIO(part.inline_data.data)).convert("RGBA")
+                    
+                    # 1. Snap to mathematical Grid (Fixes varying resolutions & fake checkerboards)
+                    processed_img = snap_to_grid(processed_img, grid_size=32)
+                    
+                    # 2. Enforce Color Palette
+                    if i == 0:
+                        base_idle_sprite = processed_img.copy()
+                        print("    🔗 Saved Base Idle sprite to memory to enforce uniformity.")
+                    else:
+                        processed_img = snap_colors_to_palette(processed_img, base_idle_sprite, bg_threshold)
+
+                    # 3. Save PNG & Convert to SVG
+                    processed_img.save(png_path)
+                    print(f"    ✅ Saved PNG: {png_path}")
+                    convert_to_svg(processed_img, svg_path, bg_threshold)
+                    
+                    saved = True
+                    break
+                    
+        if not saved:
+            print(f"    ❌ No image returned for prompt {i}")
+            
+        sprite_elapsed = time.time() - sprite_start_time
+        benchmarks[f"Sprite {i+1}: {OUTPUT_FILES[i]}"] = sprite_elapsed
+
+    return benchmarks
+
+# ———————————————————————
+# MAIN EXECUTION
+# ———————————————————————
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate uniform game sprites and convert to SVG.")
+    parser.add_argument("-t", "--threshold", type=int, default=185,
+                        help="Background brightness threshold (0-255, default: 185). Lower = more aggressive removal.")
+    args = parser.parse_args()
+
+    for f in (REF_PHOTO, GRID_IMAGE):
+        if not os.path.isfile(f):
+            print(f"🛑 ERROR: Required file '{f}' not found in current directory!")
+            return
+
+    print("🚀 Starting Dynamic Sprite Generation Pipeline...")
+    overall_start = time.time()
+    
+    # Run pipeline
+    benchmarks = generate_and_process_sprites(bg_threshold=args.threshold)
+    
+    overall_time = time.time() - overall_start
+    
+    # Print Benchmarks
+    print("\n" + "="*45)
+    print("⏱️  PIPELINE BENCHMARKS")
+    print("="*45)
+    for task, duration in benchmarks.items():
+        print(f"{task:<32} {duration:>6.2f}s")
+    print("-" * 45)
+    print(f"{'Total Pipeline Time':<32} {overall_time:>6.2f}s")
+    print("="*45)
+    
+    print("\n🎉 All done! Game-ready SVGs have been generated.")
+
+if __name__ == "__main__":
+    main()

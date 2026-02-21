@@ -1,8 +1,36 @@
 import Phaser from 'phaser';
 import { GameScene } from './game.js';
 import { GoogleGenAI } from '@google/genai';
-import { generateSprites } from './SpritePipeline.js';
+import { generateSprites, checkSpriteServer } from './SpritePipeline.js';
 
+// — Preview uploaded P1 image —
+document.getElementById('p1-sprite-image').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  const previewContainer = document.getElementById('p1-sprite-preview-container');
+  const previewImg = document.getElementById('p1-sprite-preview');
+  if (file) {
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewContainer.style.display = 'block';
+  } else {
+    previewContainer.style.display = 'none';
+  }
+});
+
+// — Check sprite server health on load —
+(async () => {
+  const statusEl = document.getElementById('p1-server-status');
+  const isUp = await checkSpriteServer();
+  if (isUp) {
+    statusEl.textContent = '✅ Sprite server connected';
+    statusEl.style.color = '#4caf50';
+  } else {
+    statusEl.textContent = '⚠️ Sprite server not running (run: python sprite_server.py)';
+    statusEl.style.color = '#ff9800';
+  }
+})();
+
+// — Start game —
 document.getElementById('start-btn').addEventListener('click', async () => {
   const p1Controls = {
     up: document.getElementById('p1-up').value.toUpperCase(),
@@ -20,29 +48,40 @@ document.getElementById('start-btn').addEventListener('click', async () => {
 
   const bgPrompt = document.getElementById('bg-prompt').value;
   const bgImageFile = document.getElementById('bg-image').files[0];
-  const p1SpriteFile = document.getElementById('p1-sprite-upload').files[0];
+  const p1SpriteFile = document.getElementById('p1-sprite-image').files[0];
 
   // Show loading
   document.getElementById('start-btn').style.display = 'none';
-  const loadingDiv = document.getElementById('loading');
-  loadingDiv.style.display = 'block';
+  document.getElementById('loading').style.display = 'block';
+  const loadingText = document.getElementById('loading-text');
 
-  let p1GeneratedSprites = null;
+  // ——————————————————————————————
+  // 1. Generate Player 1 Custom Sprites (if photo uploaded)
+  // ——————————————————————————————
+  let p1Sprites = null;
+
   if (p1SpriteFile) {
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      p1GeneratedSprites = await generateSprites(p1SpriteFile, apiKey, (statusMsg) => {
-        loadingDiv.innerText = statusMsg;
+      loadingText.textContent = 'Starting sprite generation...';
+      p1Sprites = await generateSprites(p1SpriteFile, (msg) => {
+        loadingText.textContent = msg;
       });
-    } catch (e) {
-      console.error("Error generating Player 1 sprites:", e);
-      loadingDiv.innerText = "Error generating sprites. Proceeding without custom sprites...";
-      await new Promise(r => setTimeout(r, 2000));
+      console.log('✅ Custom P1 sprites generated:', p1Sprites);
+    } catch (err) {
+      console.error('❌ Sprite generation failed, using defaults:', err);
+      loadingText.textContent = 'Sprite generation failed, using defaults...';
+      p1Sprites = null;
+      // Brief pause so user can see the message
+      await new Promise(r => setTimeout(r, 1500));
     }
   }
 
-  let bgUrl = '/assets/backgrounds/bg.svg'; // fallback
+  // ——————————————————————————————
+  // 2. Generate Background
+  // ——————————————————————————————
+  loadingText.textContent = 'Generating background...';
 
+  let bgUrl = '/assets/backgrounds/bg.svg'; // fallback
   let base64Image = null;
   let imageMimeType = null;
 
@@ -57,7 +96,6 @@ document.getElementById('start-btn').addEventListener('click', async () => {
   }
 
   if (bgPrompt.trim() || base64Image) {
-    loadingDiv.innerText = "Generating background... Please wait...";
     try {
       const apiKey = process.env.GEMINI_API_KEY;
       const ai = new GoogleGenAI({ apiKey });
@@ -99,7 +137,9 @@ document.getElementById('start-btn').addEventListener('click', async () => {
     }
   }
 
-  // Hide menu, show game
+  // ——————————————————————————————
+  // 3. Launch Game
+  // ——————————————————————————————
   document.getElementById('menu-container').style.display = 'none';
   document.getElementById('game-container').style.display = 'block';
 
@@ -108,7 +148,7 @@ document.getElementById('start-btn').addEventListener('click', async () => {
     p1Controls,
     p2Controls,
     bgUrl,
-    p1Sprites: p1GeneratedSprites
+    p1Sprites  // { idle, walk, punch, jump } blob URLs, or null
   };
 
   const config = {

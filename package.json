@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
+    "start": "python sprite_server.py & vite --clearScreen false",
+    "sprite-server": "python sprite_server.py",
     "build": "vite build",
     "preview": "vite preview"
   },

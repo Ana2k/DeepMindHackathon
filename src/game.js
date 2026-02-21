@@ -14,13 +14,16 @@ export class GameScene extends Phaser.Scene {
       this.load.svg('bg', '/assets/backgrounds/bg.svg');
     }
 
-    // Load P1 (Girl) assets from absolute paths
-    if (window.gameSettings && window.gameSettings.p1Sprites) {
-      this.load.svg('p1_stand', window.gameSettings.p1Sprites['sprite_idle']);
-      this.load.svg('p1_walk', window.gameSettings.p1Sprites['sprite_walk_right']);
-      this.load.svg('p1_jump', window.gameSettings.p1Sprites['sprite_jump']);
-      this.load.svg('p1_punch', window.gameSettings.p1Sprites['sprite_punch']);
+    // Load P1 assets — custom sprites or default Girl SVGs
+    const p1s = window.gameSettings && window.gameSettings.p1Sprites;
+    if (p1s && p1s.idle) {
+      // Custom sprites generated from the sprite pipeline (blob URLs → SVG)
+      this.load.svg('p1_stand', p1s.idle);
+      this.load.svg('p1_walk', p1s.walk || p1s.idle);
+      this.load.svg('p1_jump', p1s.jump || p1s.idle);
+      this.load.svg('p1_punch', p1s.punch || p1s.idle);
     } else {
+      // Default Girl SVGs
       this.load.svg('p1_stand', '/Girl/player1_stand.svg');
       this.load.svg('p1_walk', '/Girl/player1_walk.svg');
       this.load.svg('p1_jump', '/Girl/player1_jump.svg');

@@ -82,3 +82,19 @@ body {
   font-weight: bold;
   text-shadow: 2px 2px #000;
 }
+
+.character-section {
+  width: 100%;
+  max-width: 460px;
+}
+
+#loading {
+  color: #ff6b6b;
+  font-size: 16px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
