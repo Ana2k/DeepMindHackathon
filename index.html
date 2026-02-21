@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Supercell Bros</title>
+    <link rel="stylesheet" href="/src/style.css">
+  </head>
+  <body>
+    <div id="menu-container">
+      <h1>AI Supercell Bros</h1>
+      <div class="controls-wrapper">
+        <div class="menu-section">
+          <h2>Player 1 Controls</h2>
+          <label>Up: <input type="text" id="p1-up" value="W" maxlength="10"></label>
+          <label>Left: <input type="text" id="p1-left" value="A" maxlength="10"></label>
+          <label>Right: <input type="text" id="p1-right" value="D" maxlength="10"></label>
+          <label>Attack: <input type="text" id="p1-attack" value="F" maxlength="10"></label>
+        </div>
+        <div class="menu-section">
+          <h2>Player 2 Controls</h2>
+          <label>Up: <input type="text" id="p2-up" value="UP" maxlength="10"></label>
+          <label>Left: <input type="text" id="p2-left" value="LEFT" maxlength="10"></label>
+          <label>Right: <input type="text" id="p2-right" value="RIGHT" maxlength="10"></label>
+          <label>Attack: <input type="text" id="p2-attack" value="SHIFT" maxlength="10"></label>
+        </div>
+      </div>
+      <div class="menu-section arena-section">
+        <h2>Arena Settings</h2>
+        <label>Base Image (Optional): <input type="file" id="bg-image" accept="image/png, image/jpeg, image/webp" style="margin-top: 5px;"></label>
+        <label style="margin-top: 10px;">AI Background Prompt (or Edit Prompt):</label>
+        <input type="text" id="bg-prompt" value="A chaotic cyberpunk fighting arena, 2d platformer background, high quality, dark lighting" style="width: calc(100% - 12px); margin-top: 5px;">
+        <small style="color: #aaa; display: block; margin-top: 5px;">Powered by Gemini API (Imagen)</small>
+      </div>
+      <button id="start-btn">Generate & Start Game</button>
+      <div id="loading" style="display: none;">Generating background... Please wait...</div>
+    </div>
+
+    <div id="game-container" style="display: none;">
+      <div id="ui-container">
+        <div id="p1-score" class="score">P1: 0% | Stocks: 3</div>
+        <div id="p2-score" class="score">P2: 0% | Stocks: 3</div>
+      </div>
+      <div id="phaser-game"></div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
