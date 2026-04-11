@@ -72,3 +72,20 @@ GEMINI_API_KEY=your_api_key_here
 npm start
 ```
 *This command executes the Vite development server and the Python sprite server concurrently.*
+
+
+### 5. Outcome Images
+
+We enter the prompt for the background and upload images for our sprites
+<img width="700" height="616" alt="Screenshot 2026-02-22 at 0 29 58" src="https://github.com/user-attachments/assets/40820f3d-a057-4d40-864b-029d05126c0b" />
+
+Followed by fighting with the characters in said space. 
+<img width="1139" height="605" alt="Screenshot 2026-02-21 at 23 57 12" src="https://github.com/user-attachments/assets/5bb806ab-067e-4b23-8907-4079b07d4638" />
+
+Here is the cutest one, with a background i loved. 
+<img width="2258" height="1202" alt="image" src="https://github.com/user-attachments/assets/2a26f941-aaad-4166-a242-4dc4d429f1ba" />
+
+A tribute to my nostalgia of early 200s arcade games. 
+
+
+
