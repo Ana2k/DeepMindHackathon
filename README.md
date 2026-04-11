@@ -87,5 +87,12 @@ Here is the cutest one, with a background i loved.
 
 A tribute to my nostalgia of early 200s arcade games. 
 
+BONUS : 
+(Mulan and Virat Kohli Sprites ) 
+<img width="830" height="459" alt="Screenshot 2026-02-22 at 1 50 14" src="https://github.com/user-attachments/assets/717a93fa-2e40-435b-9285-5564f8168ae6" />
+
+( We presented Ohtani and CR7 in final presentation)
+( Will have to find the video from somewhere...)
+
 
 
